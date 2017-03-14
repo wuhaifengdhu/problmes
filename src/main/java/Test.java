@@ -70,7 +70,7 @@ public class Test{
 
     }
 
-    private static void training() throws IOException,FileNotFoundException,BiffException{
+    private static void training() throws IOException,BiffException{
         countAB();          //calculate AB
         countProAB();       //calculate the probability
         dumpProbability(proAB);

@@ -2,12 +2,10 @@ package com.haifwu.zhangheng.recover;
 
 import jxl.Sheet;
 import jxl.Workbook;
+import jxl.WorkbookSettings;
 import jxl.read.biff.BiffException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 
 /**
@@ -30,7 +28,9 @@ public class GenerateDict {
     }
 
     private void countAB() throws IOException,BiffException {
-        Workbook wb = Workbook.getWorkbook(new File(this.excel_input));
+        WorkbookSettings settings = new WorkbookSettings();
+        settings.setEncoding("ISO-8859-1");
+        Workbook wb = Workbook.getWorkbook(new File(this.excel_input), settings);
         Sheet sheet = wb.getSheet(0);
         int row_number = sheet.getRows(), column_number = sheet.getColumns();
         System.out.println("row_number=" + row_number + "  column_number=" + column_number);
@@ -95,14 +95,14 @@ public class GenerateDict {
         }
     }
 
-    public void run() throws IOException,BiffException{
+    private void run() throws IOException,BiffException{
         countAB();          //calculate AB
         countProAB();       //calculate the probability
         dumpProbability(this.proAB);
     }
 
     private void dumpProbability(HashMap<String, Double> hashMap) throws IOException {
-        FileWriter writer = new FileWriter(this.dict_output);
+        PrintWriter writer = new PrintWriter(this.dict_output, "ISO-8859-1");
         for(String key : hashMap.keySet()){
             writer.write(key + "\t" + hashMap.get(key) + "\n");
         }

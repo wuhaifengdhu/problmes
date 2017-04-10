@@ -1,7 +1,13 @@
-1, Build the jar file
->mvn clean package
+1, Build the jar file   
+Project Home> mvn clean package
 
-2, Use generated jar file
->java -jar target/problems.jar input_excel output_dict
+This will generate a dic_generate.jar under target folder, you can copy it with the folder dependency-jars to
+ anywhere for use.   
+
+2, Use generated jar file   
+Project Home> java -jar target/dic_generate.jar src/main/resources/test.xls  generic.dic
+
+3, Copy the jar dic_generate.jar for use.    
+
 
 

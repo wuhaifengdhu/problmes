@@ -9,17 +9,17 @@ import java.io.*;
 import java.util.HashMap;
 
 /**
- * Usage of this class.
+ * Generic dic file based on excel text.
  *
  * @author Wu Haifeng
  * @CreateDate: 28/3/17
  */
 public class GenerateDict {
-    private long totalWords = 0;
     private String excel_input;
     private String dict_output;
     private HashMap<String,Integer> wordABCount = new HashMap<String,Integer>(); //count words A B times
     private HashMap<String,Integer> singleWordCount = new HashMap<String,Integer>(); // count word show up times
+    private HashMap<String, Integer> aloneWordCount = new HashMap<>(); // count word alone appeared
     private HashMap<String,Double> proAB = new HashMap<String,Double>(); //record the probability of AB pro(AB) = count(A,B)/MAX(count(A*),count(*B))
 
     private GenerateDict(String excel_input, String dict_output){
@@ -46,11 +46,16 @@ public class GenerateDict {
                 if(words.length > 0){
                     increaseHashMapCountValue(singleWordCount, words[words.length - 1]);
                 }
-                this.totalWords += words.length;
+                if(words.length == 1){
+                    increaseHashMapCountValue(aloneWordCount, words[0]);
+                }
             }
         }
-        for (String key : singleWordCount.keySet()) {
-            updateSingleWordProbability(key, 0);
+    }
+
+    private void insertAloneWordPro(){
+        for (String key : aloneWordCount.keySet()) {
+            this.proAB.put(key, this.aloneWordCount.get(key) * 1.0 / this.singleWordCount.get(key));
         }
     }
 
@@ -78,8 +83,6 @@ public class GenerateDict {
                     double proA_B = wordABCount.get(key) * 1.0 / singleWordCount.get(words[1]);
                     double proB_A = wordABCount.get(key) * 1.0 / singleWordCount.get(words[0]);
                     this.proAB.put(key, Math.max(proA_B, proB_A));
-                    updateSingleWordProbability(words[0], proB_A);
-                    updateSingleWordProbability(words[1], proA_B);
                 } catch (NullPointerException e){
                     System.out.println("NullPointerException happen when key is " + key);
                 }
@@ -87,17 +90,10 @@ public class GenerateDict {
         }
     }
 
-    private void updateSingleWordProbability(String word, double notSingleProbability){
-        if(this.proAB.containsKey(word)){
-            this.proAB.put(word, this.proAB.get(word) - notSingleProbability);
-        } else {
-            this.proAB.put(word, 1.0);
-        }
-    }
-
     private void run() throws IOException,BiffException{
         countAB();          //calculate AB
         countProAB();       //calculate the probability
+        insertAloneWordPro();  // For word alone insert into dic
         dumpProbability(this.proAB);
     }
 

@@ -7,7 +7,7 @@ This will generate a dic_generate.jar under target folder, you can copy it with 
 2, Use generated jar file   
 Project Home> java -jar target/dic_generate.jar src/main/resources/test.xls  generic.dic
 
-3, Copy the jar dic_generate.jar for use.    
+  
 
 
 

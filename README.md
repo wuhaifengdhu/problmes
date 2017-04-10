@@ -1,7 +1,6 @@
-1, Build the jar file
->mvn clean package
-
-2, Use generated jar file
->java -jar target/problems.jar input_excel output_dict
+User Guide:   
+1, For dic generate please go to dic_generate branch:    
+Click Link: https://github.com/wuhaifengdhu/problmes/tree/dic_generate
 
 
+2, Waiting...

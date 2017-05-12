@@ -1,9 +1,7 @@
 package com.haifwu.zhangheng.recover;
 
-import jxl.Sheet;
-import jxl.Workbook;
-import jxl.WorkbookSettings;
-import jxl.read.biff.BiffException;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.*;
 
 import java.io.*;
 import java.util.HashMap;
@@ -27,27 +25,35 @@ public class GenerateDict {
         this.dict_output = dict_output;
     }
 
-    private void countAB() throws IOException,BiffException {
-        WorkbookSettings settings = new WorkbookSettings();
-        settings.setEncoding("ISO-8859-1");
-        Workbook wb = Workbook.getWorkbook(new File(this.excel_input), settings);
-        Sheet sheet = wb.getSheet(0);
-        int row_number = sheet.getRows(), column_number = sheet.getColumns();
-        System.out.println("row_number=" + row_number + "  column_number=" + column_number);
-        for(int i = 1 ; i < row_number ; i++){ // For each row, escape the first row
-            for (int k = 0 ; k < column_number; k++){  //For each column
-                String[] words = sheet.getCell(k,i).getContents().trim().split("\\s+"); // split by non-word characters
-                for(int j = 0; j < words.length - 1; j++){
-                    //1. Count each word
-                    increaseHashMapCountValue(singleWordCount, words[j]);
-                    //2. Count continue words
-                    increaseHashMapCountValue(wordABCount, words[j]+ " " + words[j + 1]);
-                }
-                if(words.length > 0){
-                    increaseHashMapCountValue(singleWordCount, words[words.length - 1]);
-                }
-                if(words.length == 1){
-                    increaseHashMapCountValue(aloneWordCount, words[0]);
+    private void countAB() throws IOException, InvalidFormatException {
+        Workbook book = getExcelWorkbook(this.excel_input);
+        Sheet sheet = book.getSheetAt(0);
+        DataFormatter formatter = new DataFormatter();
+        int lastRowNum = sheet.getLastRowNum();
+        System.out.println("last number is "+ lastRowNum);
+        for(int i = 1 ; i < lastRowNum ; i++){ // For each row, escape the first row
+            Row row = sheet.getRow(i);
+            if(row != null){
+                int lastCellNum = row.getLastCellNum();
+                Cell cell = null;
+                for( int k = 0 ; k <= lastCellNum ; k++ ) {
+                    cell = row.getCell(k);
+                    if( cell != null ){
+                        String cellValue = new String(formatter.formatCellValue(cell).getBytes("iso-8859-1"), "UTF-8");
+                        String[] words = cellValue.split("\\s+");
+                        for(int j = 0; j < words.length - 1; j++){
+                            //1. Count each word
+                            increaseHashMapCountValue(singleWordCount, words[j]);
+                            //2. Count continue words
+                            increaseHashMapCountValue(wordABCount, words[j]+ " " + words[j + 1]);
+                        }
+                        if(words.length > 0){
+                            increaseHashMapCountValue(singleWordCount, words[words.length - 1]);
+                        }
+                        if(words.length == 1){
+                            increaseHashMapCountValue(aloneWordCount, words[0]);
+                        }
+                    }
                 }
             }
         }
@@ -61,16 +67,17 @@ public class GenerateDict {
 
     private void increaseHashMapCountValue(HashMap<String, Integer> hashMap, String key){
         if(key.length() < 1) return;
-        if(hashMap.containsKey(key)){
-            hashMap.put(key, hashMap.get(key) + 1);
+        String lower_key = key.toLowerCase();
+        if(hashMap.containsKey(lower_key)){
+            hashMap.put(lower_key, hashMap.get(lower_key) + 1);
         } else {
-            hashMap.put(key, 1);
+            hashMap.put(lower_key, 1);
         }
     }
 
 
     //calculate the probability word A appears ,then B
-    private void countProAB() throws IOException,FileNotFoundException,BiffException {
+    private void countProAB() throws IOException {
         for (String key : wordABCount.keySet()) {
             String[] words = key.split("\\s+");
             if(words.length != 2){
@@ -90,7 +97,7 @@ public class GenerateDict {
         }
     }
 
-    private void run() throws IOException,BiffException{
+    private void run() throws IOException, InvalidFormatException {
         countAB();          //calculate AB
         countProAB();       //calculate the probability
         insertAloneWordPro();  // For word alone insert into dic
@@ -105,7 +112,30 @@ public class GenerateDict {
         writer.close();
     }
 
-    public static void main(String[] args) throws IOException, BiffException {
+    public static Workbook getExcelWorkbook(String filePath) throws IOException{
+        Workbook book = null;
+        File file  = null;
+        FileInputStream fis = null;
+
+        try {
+            file = new File(filePath);
+            if(!file.exists()){
+                throw new RuntimeException("File not exist!");
+            }else{
+                fis = new FileInputStream(file);
+                book = WorkbookFactory.create(fis);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        } finally {
+            if(fis != null){
+                fis.close();
+            }
+        }
+        return book;
+    }
+
+    public static void main(String[] args) throws IOException, InvalidFormatException {
         if(args.length < 2){
             System.out.println("Usage: GenerateDic excel_file dict_file");
             return;

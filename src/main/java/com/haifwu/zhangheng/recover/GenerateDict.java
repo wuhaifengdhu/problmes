@@ -39,7 +39,7 @@ public class GenerateDict {
                 for( int k = 0 ; k <= lastCellNum ; k++ ) {
                     cell = row.getCell(k);
                     if( cell != null ){
-                        String cellValue = new String(formatter.formatCellValue(cell).getBytes("iso-8859-1"), "UTF-8");
+                        String cellValue = new String(formatter.formatCellValue(cell).getBytes("iso-8859-1"), "iso-8859-1");
                         String[] words = cellValue.split("\\s+");
                         for(int j = 0; j < words.length - 1; j++){
                             //1. Count each word
@@ -108,6 +108,7 @@ public class GenerateDict {
         PrintWriter writer = new PrintWriter(this.dict_output, "ISO-8859-1");
         for(String key : hashMap.keySet()){
             writer.write(key + "\t" + hashMap.get(key) + "\n");
+            System.out.println(key + "\t" + hashMap.get(key));
         }
         writer.close();
     }
